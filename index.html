@@ -1,0 +1,21 @@
+<div id="iss-map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+
+<script>
+  // Initializing map with a night-mode style tile
+  const map = L.map('iss-map').setView([0, 0], 2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+  
+  const icon = L.icon({ iconUrl: 'iss-icon.png', iconSize: [40, 40] });
+  const marker = L.marker([0, 0], {icon: icon}).addTo(map);
+
+  async function updatePosition() {
+    const response = await fetch('http://api.open-notify.org/iss-now.json');
+    const data = await response.json();
+    const { latitude, longitude } = data.iss_position;
+    
+    marker.setLatLng([latitude, longitude]);
+    map.panTo([latitude, longitude]);
+    document.getElementById('coords').innerText = `LAT: ${latitude} | LON: ${longitude}`;
+  }
+  setInterval(updatePosition, 5000);
+</script>
