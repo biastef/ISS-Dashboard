@@ -1,21 +1,108 @@
-<div id="iss-map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
-
-<script>
-  // Initializing map with a night-mode style tile
-  const map = L.map('iss-map').setView([0, 0], 2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISS Mission Operations Dashboard</title>
   
-  const icon = L.icon({ iconUrl: 'iss-icon.png', iconSize: [40, 40] });
-  const marker = L.marker([0, 0], {icon: icon}).addTo(map);
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <!-- Background Elements for Aesthetics -->
+  <div class="glare glare-1"></div>
+  <div class="glare glare-2"></div>
 
-  async function updatePosition() {
-    const response = await fetch('http://api.open-notify.org/iss-now.json');
-    const data = await response.json();
-    const { latitude, longitude } = data.iss_position;
-    
-    marker.setLatLng([latitude, longitude]);
-    map.panTo([latitude, longitude]);
-    document.getElementById('coords').innerText = `LAT: ${latitude} | LON: ${longitude}`;
-  }
-  setInterval(updatePosition, 5000);
-</script>
+  <div class="dashboard-container">
+    <header class="header neon-border glass">
+      <div class="header-left">
+        <div class="live-indicator">
+          <div class="dot"></div>
+          <span>LIVE TELEMETRY</span>
+        </div>
+        <h1>ISS MISSION <span class="accent">COMMAND</span></h1>
+      </div>
+      <div class="header-right">
+        <div class="clock" id="utc-clock">00:00:00 UTC</div>
+      </div>
+    </header>
+
+    <main class="grid-layout">
+      <!-- MAP PANEL -->
+      <section class="panel map-panel glass neon-border">
+        <div class="panel-header">
+          <h2>ORBITAL POSITION</h2>
+        </div>
+        <div id="map" class="map-container"></div>
+      </section>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <!-- TELEMETRY PANEL -->
+        <section class="panel telemetry-panel glass neon-border">
+          <div class="panel-header">
+            <h2>FLIGHT DYNAMICS</h2>
+          </div>
+          <div class="telemetry-grid">
+            <div class="data-box">
+              <span class="label">ALTITUDE</span>
+              <div class="value-container">
+                <span class="value" id="alt-val">---</span>
+                <span class="unit">km</span>
+              </div>
+            </div>
+            <div class="data-box">
+              <span class="label">VELOCITY</span>
+              <div class="value-container">
+                <span class="value" id="vel-val">---</span>
+                <span class="unit">km/h</span>
+              </div>
+            </div>
+            <div class="data-box">
+              <span class="label">LATITUDE</span>
+              <div class="value-container">
+                <span class="value" id="lat-val">---</span>
+                <span class="unit">&deg;</span>
+              </div>
+            </div>
+            <div class="data-box">
+              <span class="label">LONGITUDE</span>
+              <div class="value-container">
+                <span class="value" id="lon-val">---</span>
+                <span class="unit">&deg;</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CREW MANIFEST PANEL -->
+        <section class="panel crew-panel glass neon-border">
+          <div class="panel-header">
+            <h2>CREW MANIFEST (<span id="crew-count">0</span>)</h2>
+          </div>
+          <div class="crew-list-container" id="crew-list">
+            <!-- Dynamically populated via JS -->
+            <div class="loading-text">Loading crew data...</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Custom JS -->
+  <script src="script.js"></script>
+</body>
+</html>
+
