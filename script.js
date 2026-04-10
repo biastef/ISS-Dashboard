@@ -133,8 +133,8 @@ function renderCrewManifest(crew) {
 
   crew.forEach(member => {
     // Use Flag CDN for flags, fallback to empty string
-    const flagUrl = member.flag_code ? \`https://flagcdn.com/w40/\${member.flag_code}.png\` : '';
-    const flagHtml = flagUrl ? \`<img src="\${flagUrl}" class="crew-flag" alt="\${member.country}" title="\${member.country}">\` : '';
+    const flagUrl = member.flag_code ? `https://flagcdn.com/w40/${member.flag_code}.png` : '';
+    const flagHtml = flagUrl ? `<img src="${flagUrl}" class="crew-flag" alt="${member.country}" title="${member.country}">` : '';
 
     // Fix missing images
     const imageUrl = member.image || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="%232d3748"/></svg>';
@@ -142,14 +142,14 @@ function renderCrewManifest(crew) {
     // Create Card
     const card = document.createElement('div');
     card.className = 'crew-card';
-    card.innerHTML = \`
-      <img src="\${imageUrl}" class="crew-avatar" alt="\${member.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'48\\' height=\\'48\\'><rect width=\\'48\\' height=\\'48\\' fill=\\'%232d3748\\'/></svg>'">
+    card.innerHTML = `
+      <img src="${imageUrl}" class="crew-avatar" alt="${member.name}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png'">
       <div class="crew-info">
-        <div class="crew-name">\${member.name}</div>
-        <div class="crew-role">\${member.agency || 'Unknown'} • \${member.position || 'Unknown'}</div>
+        <div class="crew-name">${member.name}</div>
+        <div class="crew-role">${member.agency || 'Unknown'} • ${member.position || 'Unknown'}</div>
       </div>
-      \${flagHtml}
-    \`;
+      ${flagHtml}
+    `;
     container.appendChild(card);
   });
 }
@@ -164,7 +164,7 @@ function startClock() {
     const hh = String(now.getUTCHours()).padStart(2, '0');
     const mm = String(now.getUTCMinutes()).padStart(2, '0');
     const ss = String(now.getUTCSeconds()).padStart(2, '0');
-    clockElement.innerText = \`\${hh}:\${mm}:\${ss} UTC\`;
+    clockElement.innerText = `${hh}:${mm}:${ss} UTC`;
   }
   
   updateClock();
