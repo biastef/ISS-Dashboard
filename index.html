@@ -11,27 +11,327 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   
   <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --bg-color: #0b0c10;
+      --panel-bg: rgba(20, 22, 28, 0.65);
+      --glass-border: rgba(66, 153, 225, 0.2);
+      --accent-blue: #4299e1;
+      --accent-cyan: #00f2fe;
+      --accent-red: #f56565;
+      --text-main: #e2e8f0;
+      --text-muted: #a0aec0;
+      --header-font: 'Orbitron', sans-serif;
+      --body-font: 'Inter', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--body-font);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(66, 153, 225, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.05) 0%, transparent 50%);
+    }
+
+    .glare {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      opacity: 0.5;
+    }
+    .glare-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--accent-blue);
+      top: -200px;
+      left: -200px;
+    }
+    .glare-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent-cyan);
+      bottom: -100px;
+      right: -100px;
+      opacity: 0.3;
+    }
+
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 1.5rem;
+      gap: 1.5rem;
+    }
+
+    .glass {
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      border-radius: 12px;
+    }
+
+    .neon-border {
+      position: relative;
+    }
+    .neon-border::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(66, 153, 225, 0.6), rgba(0, 242, 254, 0.1), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      flex-shrink: 0;
+    }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--accent-red);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-red);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-red);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px var(--accent-red); }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    h1 {
+      font-family: var(--header-font);
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+    }
+
+    h1 .accent {
+      color: var(--accent-cyan);
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+    }
+
+    .clock {
+      font-family: var(--header-font);
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      letter-spacing: 1px;
+    }
+
+    /* Layout */
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      flex-grow: 1;
+      min-height: 0;
+    }
+
+    /* Panels */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: linear-gradient(to right, rgba(0,0,0,0.4), transparent);
+    }
+
+    .panel-header h2 {
+      font-family: var(--header-font);
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+
+    /* Map */
+    .map-panel {
+      height: 100%;
+    }
+    .map-container {
+      flex-grow: 1;
+      width: 100%;
+      min-height: 400px; /* Explicit height to prevent collapse */
+      background: #000; 
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+    .leaflet-container {
+      background: #000;
+    }
+    .leaflet-bar a {
+      background-color: var(--panel-bg) !important;
+      color: var(--accent-cyan) !important;
+      border: 1px solid var(--glass-border) !important;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: 100%;
+    }
+
+    /* Telemetry Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+    }
+
+    .data-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .data-box .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .value-container {
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+    }
+
+    .value-container .value {
+      font-family: var(--header-font);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .value-container .unit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Crew Manifest */
+    .crew-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .crew-list-container {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .crew-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+    
+    .crew-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-blue);
+    }
+
+    .crew-info {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .crew-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .crew-role {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .crew-flag {
+      width: 24px;
+      border-radius: 3px;
+    }
+
+    .error-text {
+      text-align: center;
+      color: var(--accent-red);
+      padding: 1rem;
+    }
+  </style>
 </head>
 <body>
   
-  <!-- Background Elements for Aesthetics -->
   <div class="glare glare-1"></div>
   <div class="glare glare-2"></div>
 
   <div class="dashboard-container">
     <header class="header neon-border glass">
-      <div class="header-left">
+      <div style="display: flex; flex-direction: column; gap: 0.25rem;">
         <div class="live-indicator">
           <div class="dot"></div>
           <span>LIVE TELEMETRY</span>
         </div>
         <h1>ISS MISSION <span class="accent">COMMAND</span></h1>
       </div>
-      <div class="header-right">
+      <div>
         <div class="clock" id="utc-clock">00:00:00 UTC</div>
       </div>
     </header>
@@ -48,7 +348,7 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <!-- TELEMETRY PANEL -->
-        <section class="panel telemetry-panel glass neon-border">
+        <section class="panel glass neon-border">
           <div class="panel-header">
             <h2>FLIGHT DYNAMICS</h2>
           </div>
@@ -90,8 +390,7 @@
             <h2>CREW MANIFEST (<span id="crew-count">0</span>)</h2>
           </div>
           <div class="crew-list-container" id="crew-list">
-            <!-- Dynamically populated via JS -->
-            <div class="loading-text">Loading crew data...</div>
+            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading data...</div>
           </div>
         </section>
       </aside>
@@ -99,9 +398,141 @@
   </div>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   
-  <!-- Custom JS -->
-  <script src="script.js"></script>
+  <script>
+    // Configuration & State
+    const API_URL_ISS = 'https://api.wheretheiss.at/v1/satellites/25544';
+    const API_URL_CREW = 'https://corquaid.github.io/international-space-station-APIs/JSON/people-in-space.json';
+    const UPDATE_INTERVAL = 2000; 
+
+    let map;
+    let issMarker;
+    let isFirstLoad = true;
+    let flightPath = []; 
+    let polyline;
+
+    // Custom SVG Icon for the ISS
+    const svgIcon = `
+    <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="30" width="35" height="40" fill="#4299e1" stroke="#00f2fe" stroke-width="2" rx="2" />
+      <rect x="60" y="30" width="35" height="40" fill="#4299e1" stroke="#00f2fe" stroke-width="2" rx="2" />
+      <rect x="40" y="45" width="20" height="10" fill="#e2e8f0" stroke="#a0aec0" stroke-width="1" />
+      <rect x="45" y="20" width="10" height="60" fill="#cbd5e1" stroke="#a0aec0" stroke-width="1" rx="2"/>
+      <circle cx="50" cy="50" r="5" fill="#f56565">
+        <animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+    `;
+
+    // Ensure code runs
+    initMap();
+    startClock();
+    fetchCrewData();
+    fetchIssData();
+    setInterval(fetchIssData, UPDATE_INTERVAL);
+
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: false,
+        maxZoom: 10,
+        minZoom: 2,
+        worldCopyJump: true 
+      }).setView([0, 0], 3);
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles by Esri'
+      }).addTo(map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      const markerIcon = L.divIcon({
+        className: 'iss-icon',
+        html: svgIcon,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
+
+      issMarker = L.marker([0, 0], { icon: markerIcon, zIndexOffset: 1000 }).addTo(map);
+      polyline = L.polyline([], {color: '#00f2fe', weight: 2, opacity: 0.6, dashArray: '5, 10'}).addTo(map);
+    }
+
+    async function fetchIssData() {
+      try {
+        const response = await fetch(API_URL_ISS);
+        if (!response.ok) throw new Error('API Error');
+        const data = await response.json();
+        
+        const lat = data.latitude;
+        const lon = data.longitude;
+        const alt = data.altitude.toFixed(2);
+        const vel = data.velocity.toFixed(2);
+
+        issMarker.setLatLng([lat, lon]);
+        
+        flightPath.push([lat, lon]);
+        if (flightPath.length > 2000) flightPath.shift();
+        polyline.setLatLngs(flightPath);
+        
+        if (isFirstLoad) {
+          map.setView([lat, lon], 4);
+          isFirstLoad = false;
+        }
+
+        document.getElementById('lat-val').innerText = lat.toFixed(4);
+        document.getElementById('lon-val').innerText = lon.toFixed(4);
+        document.getElementById('alt-val').innerText = alt;
+        document.getElementById('vel-val').innerText = parseFloat(vel).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      } catch (error) {
+        console.error('Data error:', error);
+      }
+    }
+
+    async function fetchCrewData() {
+      try {
+        const response = await fetch(API_URL_CREW);
+        if (!response.ok) throw new Error('API Error');
+        const data = await response.json();
+        const issCrew = data.people.filter(p => p.iss === true);
+        
+        document.getElementById('crew-count').innerText = issCrew.length;
+        const container = document.getElementById('crew-list');
+        container.innerHTML = '';
+
+        issCrew.forEach(member => {
+          const flagUrl = member.flag_code ? `https://flagcdn.com/w40/${member.flag_code}.png` : '';
+          const flagHtml = flagUrl ? `<img src="${flagUrl}" class="crew-flag" alt="${member.country}">` : '';
+          const imageUrl = member.image || 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png';
+
+          const card = document.createElement('div');
+          card.className = 'crew-card';
+          card.innerHTML = `
+            <img src="${imageUrl}" class="crew-avatar" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png'">
+            <div class="crew-info">
+              <div class="crew-name">${member.name}</div>
+              <div class="crew-role">${member.agency || 'Unknown'} • ${member.position || 'Unknown'}</div>
+            </div>
+            ${flagHtml}
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        document.getElementById('crew-list').innerHTML = '<div class="error-text">Failed to load crew. Ensure you have an internet connection.</div>';
+      }
+    }
+
+    function startClock() {
+      const clockElement = document.getElementById('utc-clock');
+      function updateClock() {
+        const now = new Date();
+        const hh = String(now.getUTCHours()).padStart(2, '0');
+        const mm = String(now.getUTCMinutes()).padStart(2, '0');
+        const ss = String(now.getUTCSeconds()).padStart(2, '0');
+        clockElement.innerText = `${hh}:${mm}:${ss} UTC`;
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+    }
+  </script>
 </body>
 </html>
